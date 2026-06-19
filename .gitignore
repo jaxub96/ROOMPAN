@@ -1,0 +1,7 @@
+Builds/
+build/
+*.vcxproj.user
+*.vcxproj.filters
+.vs/
+JuceLibraryCode/
+*.jucer.bak
