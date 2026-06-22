@@ -9,10 +9,10 @@
 // relative to the other (interaural time difference, ITD), based on the
 // Woodworth-Schlosberg spherical head model, so the pan feels like a real
 // source position rather than just a volume balance.
-class RoomPanner
+class RoomPan
 {
 public:
-    RoomPanner() = default;
+    RoomPan() = default;
 
     void prepare(double newSampleRate, int maxBlockSize);
     void reset();
@@ -52,11 +52,11 @@ private:
 };
 
 //==============================================================================
-class Roompan02AudioProcessor : public juce::AudioProcessor
+class RoomPanAudioProcessor : public juce::AudioProcessor
 {
 public:
-    Roompan02AudioProcessor();
-    ~Roompan02AudioProcessor() override;
+    RoomPanAudioProcessor();
+    ~RoomPanAudioProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -92,12 +92,12 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    RoomPanner roomPanner;
+    RoomPan roomPan;
 
     std::atomic<float>* panParam = nullptr;
     std::atomic<float>* widthParam = nullptr;
     std::atomic<float>* ildParam = nullptr;
     std::atomic<float>* depthParam = nullptr;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Roompan02AudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RoomPanAudioProcessor)
 };

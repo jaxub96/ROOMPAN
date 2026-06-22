@@ -3,9 +3,9 @@
 #include <cmath>
 
 //==============================================================================
-// RoomPanner
+// RoomPan
 //==============================================================================
-void RoomPanner::prepare(double newSampleRate, int /*maxBlockSize*/)
+void RoomPan::prepare(double newSampleRate, int /*maxBlockSize*/)
 {
     sampleRate = newSampleRate;
     /* Woodworth-Schlosberg: 
@@ -37,18 +37,18 @@ void RoomPanner::prepare(double newSampleRate, int /*maxBlockSize*/)
     smoothedDepth.reset(sampleRate, 0.05);
 }
 
-void RoomPanner::reset()
+void RoomPan::reset()
 {
     std::fill(ringBuffer.begin(), ringBuffer.end(), 0.0f);
     writePos = 0;
 }
 
-void RoomPanner::setPan(float newPan) { smoothedPan.setTargetValue(newPan); }
-void RoomPanner::setWidth(float newWidthPercent) { smoothedWidth.setTargetValue(newWidthPercent); }
-void RoomPanner::setIldAmount(float newIldAmount) { smoothedIld.setTargetValue(newIldAmount); }
-void RoomPanner::setDepth(float newDepth) { smoothedDepth.setTargetValue(newDepth); }
+void RoomPan::setPan(float newPan) { smoothedPan.setTargetValue(newPan); }
+void RoomPan::setWidth(float newWidthPercent) { smoothedWidth.setTargetValue(newWidthPercent); }
+void RoomPan::setIldAmount(float newIldAmount) { smoothedIld.setTargetValue(newIldAmount); }
+void RoomPan::setDepth(float newDepth) { smoothedDepth.setTargetValue(newDepth); }
 
-float RoomPanner::computeSignedItdSeconds(float panValue, float widthScale) const
+float RoomPan::computeSignedItdSeconds(float panValue, float widthScale) const
 {
     const auto theta = panValue * juce::MathConstants<float>::halfPi; // pan(-1..1) -> +/-90 degrees
     const auto magnitude = (headRadiusMetres / speedOfSoundMps)
@@ -56,13 +56,13 @@ float RoomPanner::computeSignedItdSeconds(float panValue, float widthScale) cons
     return (panValue < 0.0f ? -magnitude : magnitude) * widthScale;
 }
 
-void RoomPanner::pushSample(float sample)
+void RoomPan::pushSample(float sample)
 {
     ringBuffer[(size_t)writePos] = sample;
     writePos = (writePos + 1) % bufferSize;
 }
 
-float RoomPanner::readInterpolated(float delayInSamples) const
+float RoomPan::readInterpolated(float delayInSamples) const
 {
     const auto bufSizeF = (float)bufferSize;
     auto readPos = (float)(writePos - 1) - delayInSamples;
@@ -80,7 +80,7 @@ float RoomPanner::readInterpolated(float delayInSamples) const
     return s0 + frac * (s1 - s0);
 }
 
-void RoomPanner::process(juce::AudioBuffer<float>& buffer)
+void RoomPan::process(juce::AudioBuffer<float>& buffer)
 {
     const auto numSamples = buffer.getNumSamples();
     const auto numChannels = buffer.getNumChannels();
@@ -129,9 +129,9 @@ void RoomPanner::process(juce::AudioBuffer<float>& buffer)
 }
 
 //==============================================================================
-// Roompan02AudioProcessor
+// RoomPanAudioProcessor
 //==============================================================================
-Roompan02AudioProcessor::Roompan02AudioProcessor()
+RoomPanAudioProcessor::RoomPanAudioProcessor()
     : AudioProcessor(BusesProperties()
         .withInput("Input", juce::AudioChannelSet::stereo(), true)
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -143,9 +143,9 @@ Roompan02AudioProcessor::Roompan02AudioProcessor()
     depthParam = apvts.getRawParameterValue("depth");
 }
 
-Roompan02AudioProcessor::~Roompan02AudioProcessor() = default;
+RoomPanAudioProcessor::~RoomPanAudioProcessor() = default;
 
-juce::AudioProcessorValueTreeState::ParameterLayout Roompan02AudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout RoomPanAudioProcessor::createParameterLayout()
 {
     // Note: some JUCE versions (7.x+) expect juce::ParameterID ("pan", 1) as the
     // first constructor argument instead of a bare string. If this doesn't
@@ -170,22 +170,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout Roompan02AudioProcessor::cre
     };
 }
 
-void Roompan02AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void RoomPanAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    roomPanner.prepare(sampleRate, samplesPerBlock);
-    const auto latencySamples = (int)std::round(roomPanner.getLatencySeconds() * sampleRate);
-    setLatencySamples(latencySamples);
+    roomPan.prepare(sampleRate, samplesPerBlock);
+    const auto newLatencySamples = (int)std::round(roomPan.getLatencySeconds() * sampleRate);
+    setLatencySamples(newLatencySamples);
 }
 
-void Roompan02AudioProcessor::releaseResources() {}
+void RoomPanAudioProcessor::releaseResources() {}
 
-void Roompan02AudioProcessor::reset()
+void RoomPanAudioProcessor::reset()
 {
-    roomPanner.reset();
+    roomPan.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool Roompan02AudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool RoomPanAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
 #if JucePlugin_IsMidiEffect
     juce::ignoreUnused(layouts);
@@ -204,45 +204,45 @@ bool Roompan02AudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts)
 }
 #endif
 
-void Roompan02AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void RoomPanAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
 
-    roomPanner.setPan(panParam->load());
-    roomPanner.setWidth(widthParam->load());
-    roomPanner.setIldAmount(ildParam->load());
-    roomPanner.setDepth(depthParam->load());
+    roomPan.setPan(panParam->load());
+    roomPan.setWidth(widthParam->load());
+    roomPan.setIldAmount(ildParam->load());
+    roomPan.setDepth(depthParam->load());
 
-    roomPanner.process(buffer);
+    roomPan.process(buffer);
 }
 
-juce::AudioProcessorEditor* Roompan02AudioProcessor::createEditor()
+juce::AudioProcessorEditor* RoomPanAudioProcessor::createEditor()
 {
-    return new Roompan02AudioProcessorEditor(*this);
+    return new RoomPanAudioProcessorEditor(*this);
 }
 
-bool Roompan02AudioProcessor::hasEditor() const { return true; }
+bool RoomPanAudioProcessor::hasEditor() const { return true; }
 
-const juce::String Roompan02AudioProcessor::getName() const { return JucePlugin_Name; }
-bool Roompan02AudioProcessor::acceptsMidi() const { return false; }
-bool Roompan02AudioProcessor::producesMidi() const { return false; }
-bool Roompan02AudioProcessor::isMidiEffect() const { return false; }
-double Roompan02AudioProcessor::getTailLengthSeconds() const { return 0.0; }
+const juce::String RoomPanAudioProcessor::getName() const { return JucePlugin_Name; }
+bool RoomPanAudioProcessor::acceptsMidi() const { return false; }
+bool RoomPanAudioProcessor::producesMidi() const { return false; }
+bool RoomPanAudioProcessor::isMidiEffect() const { return false; }
+double RoomPanAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int Roompan02AudioProcessor::getNumPrograms() { return 1; }
-int Roompan02AudioProcessor::getCurrentProgram() { return 0; }
-void Roompan02AudioProcessor::setCurrentProgram(int) {}
-const juce::String Roompan02AudioProcessor::getProgramName(int) { return {}; }
-void Roompan02AudioProcessor::changeProgramName(int, const juce::String&) {}
+int RoomPanAudioProcessor::getNumPrograms() { return 1; }
+int RoomPanAudioProcessor::getCurrentProgram() { return 0; }
+void RoomPanAudioProcessor::setCurrentProgram(int) {}
+const juce::String RoomPanAudioProcessor::getProgramName(int) { return {}; }
+void RoomPanAudioProcessor::changeProgramName(int, const juce::String&) {}
 
-void Roompan02AudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+void RoomPanAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
 
-void Roompan02AudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+void RoomPanAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
@@ -254,5 +254,5 @@ void Roompan02AudioProcessor::setStateInformation(const void* data, int sizeInBy
 // This creates the instance of the plugin that the JUCE wrapper code talks to.
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new Roompan02AudioProcessor();
+    return new RoomPanAudioProcessor();
 }

@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build and Debug in AudioPluginHost",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "C:\\Users\\jkjw\\Downloads\\juce-8.0.12-windows\\JUCE\\extras\\AudioPluginHost\\Builds\\VisualStudio2026\\x64\\Debug\\App\\AudioPluginHost.exe",
+            "args": ["${workspaceFolder}\\RoomPan.filtergraph"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Debug in AudioPluginHost (no build)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "C:\\Users\\jkjw\\Downloads\\juce-8.0.12-windows\\JUCE\\extras\\AudioPluginHost\\Builds\\VisualStudio2026\\x64\\Debug\\App\\AudioPluginHost.exe",
+            "args": ["${workspaceFolder}\\RoomPan.filtergraph"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal"
+        }
+    ]
+}

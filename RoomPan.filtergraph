@@ -61,23 +61,6 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="18" x="0.39125" y="0.5331991951710262" useARA="0" uiLastX_Normal="161"
-          uiLastY_Normal="456" uiopen_Normal="0">
-    <PLUGIN name="Roompan02" format="VST3" category="Fx" manufacturer="yourcompany"
-            version="1.0.0" file="C:\Users\jkjw\Documents\VST3\Roompan02.vst3\Contents\x86_64-win\Roompan02.vst3"
-            uniqueId="f2a6a928" isInstrument="0" fileTime="19edf8f6a42" infoUpdateTime="19edf8fcd6d"
-            numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
-            uid="e95389ae"/>
-    <STATE>411.VMjLgHY....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9HiLz3hUMoFSmIWRt3hKt7zJlcUXxEDZisVRxH1a3vVX3fjTLQmKogjYTwVXogiQY8FMwjENHIUUTkEUKMCR38TNtHzSPUjZTEDLTEEUUoFUSQyPOAUQpQUPvPDRuEkUOglZFElZIIDRwTjQgASUV8DZtj1RvfDdKkicCQUPIUETMEjTZoFLogjcEwVXn4BZic1cVM1ZvjFR1MiPLg1Mn8zMtTETRUDUSYlZFkENHg2XuEkQi4VRBgTLEYTXvTkUOgFQCwjcyHDSncCZOcyMBQUPIUETMUEQUUTRvPUNt3hKt3hKt3hKt3hKtQUUCUEQTg2ZrM1YQcUVDUjQicVPP4RPHQEY1UTLhkWPP4RPL4hKi4hKt3hKt3hKtXlTU0DUQAURWoULEYzXqEEUXoWQFwyKIMzasA2atUlaz4COuX0TTMCTrU2Yo41TzEFck4C.</STATE>
-    <LAYOUT>
-      <INPUTS>
-        <BUS index="0" layout="L R"/>
-      </INPUTS>
-      <OUTPUTS>
-        <BUS index="0" layout="L R"/>
-      </OUTPUTS>
-    </LAYOUT>
-  </FILTER>
   <FILTER uid="19" x="0.275" y="0.3420523138832998" useARA="0">
     <PLUGIN name="Sine Wave Synth" format="Internal" category="Synth" manufacturer="JUCE"
             version="1.0.0" file="Sine Wave Synth" uniqueId="16fd76a8" isInstrument="1"
@@ -91,9 +74,26 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
+  <FILTER uid="20" x="0.395" y="0.7128309572301426" useARA="0" uiLastX_Normal="440"
+          uiLastY_Normal="363" uiopen_Normal="0">
+    <PLUGIN name="RoomPan" format="VST3" category="Fx" manufacturer="" version="1.0.0"
+            file="C:\Users\jkjw\Documents\VST3\ROOMPAN.vst3\Contents\x86_64-win\ROOMPAN.vst3"
+            uniqueId="f2a6a928" isInstrument="0" fileTime="19eee9a4ccc" infoUpdateTime="19eee9b32da"
+            numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
+            uid="e95389ae"/>
+    <STATE>452.VMjLgra....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9HSM03hUMoFSm41Rt3hKt7zJlcUXxEDZisVRxH1a3vVX3fjTLQmKogjYTwVXogiQY8FMwjENHIUUTkEUKMCR38TNtHzSPUjZTEDLTEEUUoFUSQyPOAUQpQUPvPDRuEkUOgFTVkkcQcjVn4BZic1cVM1ZvjFR1MiTMg1Mn8zMtTETRUDUSYlZFkENHIkVxEEaHYFVWgkbUcUV3fjPLQGUogTcyLzSPUjZTEDLDgzaQY0Sn4xUXQWRBgTLEYTXvTkUOglKosjcHg2R4X2PTETRUAUSAIkVpASZHIyZFkkdmwFRlg0UXIWUWkENHIES14RZKYGR3sTN1k2RPUjZTEDLTEEUUoFUSQyPt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
+    <LAYOUT>
+      <INPUTS>
+        <BUS index="0" layout="L R"/>
+      </INPUTS>
+      <OUTPUTS>
+        <BUS index="0" layout="L R"/>
+      </OUTPUTS>
+    </LAYOUT>
+  </FILTER>
   <CONNECTION srcFilter="15" srcChannel="4096" dstFilter="19" dstChannel="4096"/>
-  <CONNECTION srcFilter="18" srcChannel="0" dstFilter="16" dstChannel="0"/>
-  <CONNECTION srcFilter="18" srcChannel="1" dstFilter="16" dstChannel="1"/>
-  <CONNECTION srcFilter="19" srcChannel="0" dstFilter="18" dstChannel="0"/>
-  <CONNECTION srcFilter="19" srcChannel="1" dstFilter="18" dstChannel="1"/>
+  <CONNECTION srcFilter="19" srcChannel="0" dstFilter="20" dstChannel="0"/>
+  <CONNECTION srcFilter="19" srcChannel="1" dstFilter="20" dstChannel="1"/>
+  <CONNECTION srcFilter="20" srcChannel="0" dstFilter="16" dstChannel="0"/>
+  <CONNECTION srcFilter="20" srcChannel="1" dstFilter="16" dstChannel="1"/>
 </FILTERGRAPH>

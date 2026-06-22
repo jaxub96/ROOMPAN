@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="er7smf" name="Roompan02" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginProducesMidiOut,pluginWantsMidiIn"
-              pluginFormats="buildVST3">
-  <MAINGROUP id="KP0Cz8" name="Roompan02">
+<JUCERPROJECT id="er7smf" name="RoomPan" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginFormats="buildVST3"
+              companyWebsite=" " pluginManufacturer=" " aaxIdentifier=" " pluginAUExportPrefix=" ">
+  <MAINGROUP id="KP0Cz8" name="RoomPan">
     <GROUP id="{4B3D73C8-228E-CA2F-8C5A-99F7DE35968D}" name="Source">
       <FILE id="YEMroN" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
@@ -35,10 +35,12 @@
   <EXPORTFORMATS>
     <VS2026 targetFolder="Builds/VisualStudio2026">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Roompan02" enablePluginBinaryCopyStep="1"
+        <CONFIGURATION isDebug="1" name="Debug" targetName="RoomPan" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation_x64="C:\Users\jkjw\Documents\VST3" vst3BinaryLocation_Win32="C:\Users\jkjw\Documents\VST3"
-                       vst3BinaryLocation_arm64="C:\Users\jkjw\Documents\VST3" vst3BinaryLocation_arm64ec="C:\Users\jkjw\Documents\VST3"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="Roompan02"/>
+                       vst3BinaryLocation_arm64="C:\Users\jkjw\Documents\VST3" vst3BinaryLocation_arm64ec="C:\Users\jkjw\Documents\VST3"
+                       linkTimeOptimisation="1" usePrecompiledHeaderFile="1" optimisation="4"
+                       enableIncrementalLinking="1"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="ROOMPAN"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../OneDrive - Demant/Documents/Personal/juce-8.0.12-windows/JUCE/modules"/>

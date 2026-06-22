@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Debug",
+            "type": "process",
+            "command": "${workspaceFolder}\\build-debug.bat",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Release",
+            "type": "process",
+            "command": "${workspaceFolder}\\build-release.bat",
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
