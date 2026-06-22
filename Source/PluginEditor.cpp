@@ -66,9 +66,9 @@ void SourcePositionView::timerCallback()
     displayedAngleRad += (targetAngleRad - displayedAngleRad) * 0.25f;
 
     // placeholder: once a "distance" parameter exists, read and map it here
-    // const float distance = processor.apvts.getRawParameterValue ("distance")->load();
-    // const float targetDistance01 = distance; // assuming already 0..1
-    // displayedDistance01 += (targetDistance01 - displayedDistance01) * 0.25f;
+    const float distance = processor.apvts.getRawParameterValue ("depth")->load();
+    const float targetDistance01 = distance; // assuming already 0..1
+    displayedDistance01 += (targetDistance01 - displayedDistance01) * 0.25f;
 
     repaint();
 }
@@ -80,9 +80,15 @@ void SourcePositionView::paint (juce::Graphics& g)
     const float centreX = bounds.getCentreX();
     const float centreY = bounds.getCentreY();
 
-    const auto track      = juce::Colour (RoomPanLookAndFeel::colourTrack);
-    const auto textColour = juce::Colour (RoomPanLookAndFeel::colourTextSecondary);
-    const auto accent     = juce::Colour (RoomPanLookAndFeel::colourAccent);
+    // replace these lines at the top of paint():
+    const auto background = juce::Colour(RoomPanLookAndFeel::colourPanel);
+    const auto track      = juce::Colour(0xffc2cbd6);
+    const auto textColour = juce::Colour(RoomPanLookAndFeel::colourTextSecondary);
+    const auto accent     = juce::Colour(0xff3a3d42);   // dark dot, matches knob body
+
+    // fill the view's own background so it blends into the panel
+    g.setColour(background);
+    g.fillRoundedRectangle(getLocalBounds().toFloat().reduced(4.0f), 8.0f);
 
     // --- Distance rings: concentric circles at 25/50/75/100% radius ---
     g.setColour (track);
@@ -122,10 +128,10 @@ void SourcePositionView::paint (juce::Graphics& g)
         g.setColour (accent.withAlpha (0.35f));
         g.drawLine (centreX, centreY, sx, sy, 1.2f);
 
-        g.setColour (accent);
-        g.fillEllipse (sx - 5.0f, sy - 5.0f, 10.0f, 10.0f);
-        g.setColour (juce::Colours::white);
-        g.fillEllipse (sx - 1.8f, sy - 1.8f, 3.6f, 3.6f); // small centre highlight
+        g.setColour(juce::Colour(0xff2e3238));
+        g.fillEllipse(sx - 6.0f, sy - 6.0f, 12.0f, 12.0f);
+        g.setColour(juce::Colours::white.withAlpha(0.6f));
+        g.fillEllipse(sx - 2.0f, sy - 2.0f, 4.0f, 4.0f);
     }
 
     // --- Outer boundary circle ---
@@ -145,12 +151,17 @@ void SourcePositionView::resized()
 {
     // nothing to lay out internally — paint() reads getLocalBounds() directly
 }
+
 RoomPanLookAndFeel::RoomPanLookAndFeel()
 {
-    setColour (juce::ResizableWindow::backgroundColourId, juce::Colour (colourBackground));
-    setColour (juce::Slider::textBoxTextColourId,         juce::Colour (colourTextPrimary));
-    setColour (juce::Slider::textBoxBackgroundColourId,   juce::Colours::transparentBlack);
-    setColour (juce::Slider::textBoxOutlineColourId,      juce::Colours::transparentBlack);
+    setColour(juce::ResizableWindow::backgroundColourId,
+              juce::Colour(colourBackground));
+    setColour(juce::Slider::textBoxTextColourId,
+              juce::Colour(colourTextPrimary));
+    setColour(juce::Slider::textBoxBackgroundColourId,
+              juce::Colours::transparentBlack);
+    setColour(juce::Slider::textBoxOutlineColourId,
+              juce::Colours::transparentBlack);
 }
 
 void RoomPanLookAndFeel::drawRotarySlider(
@@ -161,130 +172,185 @@ void RoomPanLookAndFeel::drawRotarySlider(
     float rotaryEndAngle,
     juce::Slider& slider)
 {
-    auto bounds = juce::Rectangle<float> ((float) x, (float) y, (float) width, (float) height)
-                      .reduced (6.0f);
+    auto bounds = juce::Rectangle<float>((float)x, (float)y, (float)width, (float)height)
+                      .reduced(8.0f);
 
-    auto radius  = juce::jmin (bounds.getWidth(), bounds.getHeight()) * 0.5f;
-    auto centreX = bounds.getCentreX();
-    auto centreY = bounds.getCentreY();
+    const float radius  = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.5f;
+    const float centreX = bounds.getCentreX();
+    const float centreY = bounds.getCentreY();
+    const float angle   = rotaryStartAngle
+                        + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
 
-    auto angle = rotaryStartAngle
-        + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
-
-    const auto accent     = juce::Colour (colourAccent);
-    const auto accentSoft = juce::Colour (colourAccentSoft);
-    const auto track      = juce::Colour (colourTrack);
-    const auto textColour = juce::Colour (colourTextSecondary);
-
-    // --- Tick scale: thin, precise marks, 0 to 10, no filled wedge ---
-    constexpr int numTicks = 11;
-    const float tickRadius      = radius * 1.0f;
-    const float tickLengthMinor = radius * 0.09f;
-    const float tickLengthMajor = radius * 0.16f;
-
-    for (int i = 0; i < numTicks; ++i)
+    // --- Track ring background ---
     {
-        const float proportion = (float) i / (float) (numTicks - 1);
-        const float tickAngle  = rotaryStartAngle
-            + proportion * (rotaryEndAngle - rotaryStartAngle);
-
-        const bool isMajor  = (i % 5 == 0);
-        const bool isActive = proportion <= sliderPosProportional + 0.001f;
-        const float tickLength = isMajor ? tickLengthMajor : tickLengthMinor;
-
-        juce::Point<float> inner (centreX + (tickRadius - tickLength) * std::sin (tickAngle),
-                                   centreY - (tickRadius - tickLength) * std::cos (tickAngle));
-        juce::Point<float> outer (centreX + tickRadius * std::sin (tickAngle),
-                                   centreY - tickRadius * std::cos (tickAngle));
-
-        g.setColour (isActive ? accent : track);
-        g.drawLine ({ inner, outer }, isMajor ? 1.6f : 1.0f);
+        const float trackR = radius * 0.92f;
+        juce::Path trackArc;
+        trackArc.addCentredArc(centreX, centreY, trackR, trackR,
+                                0.0f, rotaryStartAngle, rotaryEndAngle, true);
+        g.setColour(juce::Colour(0xffc2cbd6));
+        g.strokePath(trackArc, juce::PathStrokeType(3.5f, juce::PathStrokeType::curved,
+                                                      juce::PathStrokeType::rounded));
     }
 
-    // --- Knob body: flat, single soft fill, no bevel or gradient ---
-    auto knobBounds = juce::Rectangle<float> (centreX - radius * 0.66f, centreY - radius * 0.66f,
-                                               radius * 1.32f, radius * 1.32f);
-    g.setColour (juce::Colours::white);
-    g.fillEllipse (knobBounds);
-    g.setColour (track);
-    g.drawEllipse (knobBounds, 1.2f);
+    // --- Value arc: white, same weight as track ---
+    {
+        const float trackR = radius * 0.92f;
+        juce::Path valueArc;
+        valueArc.addCentredArc(centreX, centreY, trackR, trackR,
+                                0.0f, rotaryStartAngle, angle, true);
+        g.setColour(juce::Colours::white);
+        g.strokePath(valueArc, juce::PathStrokeType(3.5f, juce::PathStrokeType::curved,
+                                                      juce::PathStrokeType::rounded));
+    }
 
-    // --- Pointer: a single clean line from centre toward the edge ---
+    // --- Knob shadow: soft dark ellipse slightly offset downward ---
+    {
+        auto shadowBounds = juce::Rectangle<float>(centreX - radius * 0.78f,
+                                                    centreY - radius * 0.74f,
+                                                    radius * 1.56f,
+                                                    radius * 1.56f);
+        g.setColour(juce::Colour(0x33000000));
+        g.fillEllipse(shadowBounds.expanded(3.0f).translated(0.0f, 3.0f));
+    }
+
+    // --- Knob body: dark charcoal, slightly warm ---
+    auto knobBounds = juce::Rectangle<float>(centreX - radius * 0.78f,
+                                              centreY - radius * 0.78f,
+                                              radius * 1.56f,
+                                              radius * 1.56f);
+    {
+        juce::ColourGradient bodyGrad(
+            juce::Colour(0xff3a3d42), centreX, knobBounds.getY(),
+            juce::Colour(0xff26282c), centreX, knobBounds.getBottom(),
+            false);
+        g.setGradientFill(bodyGrad);
+        g.fillEllipse(knobBounds);
+    }
+
+    // --- Subtle inner rim: slightly lighter edge at top ---
+    g.setColour(juce::Colour(0xff4a4d52));
+    g.drawEllipse(knobBounds.reduced(0.5f), 1.0f);
+
+    // --- Pointer: short white line near edge ---
     {
         juce::Path pointer;
-        const float innerR = radius * 0.18f;
-        const float outerR = radius * 0.58f;
-        pointer.startNewSubPath (0.0f, -innerR);
-        pointer.lineTo (0.0f, -outerR);
+        const float innerR = radius * 0.45f;
+        const float outerR = radius * 0.72f;
+        pointer.startNewSubPath(0.0f, -innerR);
+        pointer.lineTo(0.0f, -outerR);
 
-        g.setColour (accent);
-        g.strokePath (pointer, juce::PathStrokeType (2.0f, juce::PathStrokeType::curved,
-                                                       juce::PathStrokeType::rounded),
-                      juce::AffineTransform().rotated (angle).translated (centreX, centreY));
-
-        // small centre dot
-        g.setColour (accent);
-        g.fillEllipse (centreX - 2.5f, centreY - 2.5f, 5.0f, 5.0f);
+        g.setColour(juce::Colours::white.withAlpha(0.9f));
+        g.strokePath(pointer,
+                     juce::PathStrokeType(2.2f, juce::PathStrokeType::curved,
+                                           juce::PathStrokeType::rounded),
+                     juce::AffineTransform().rotated(angle).translated(centreX, centreY));
     }
 
-    // --- Live value readout, beneath the knob, in place of a boxed textbox ---
-    if (auto* s = dynamic_cast<juce::Slider*> (&slider))
+    // --- Value readout: clean number below knob, in a soft pill box ---
+    if (auto* s = dynamic_cast<juce::Slider*>(&slider))
     {
-        g.setFont (juce::Font (juce::FontOptions (12.0f)));
-        g.setColour (textColour);
-        g.drawText (s->getTextFromValue (s->getValue()),
-                    juce::Rectangle<float> (centreX - 40, centreY + radius * 0.78f, 80, 16),
-                    juce::Justification::centred);
+        const auto valText = s->getTextFromValue(s->getValue());
+        const float boxW   = 70.0f;
+        const float boxH   = 22.0f;
+        const float boxX   = centreX - boxW * 0.5f;
+        const float boxY   = centreY + radius * 0.86f;
+
+        juce::Rectangle<float> boxBounds(boxX, boxY, boxW, boxH);
+
+        g.setColour(juce::Colour(0xffdce3ea));
+        g.fillRoundedRectangle(boxBounds, 4.0f);
+
+        g.setFont(juce::Font(juce::FontOptions(12.5f)).withStyle(juce::Font::plain));
+        g.setColour(juce::Colour(0xff2e3238));
+        g.drawText(valText, boxBounds, juce::Justification::centred);
     }
 }
-
-void RoomPanLookAndFeel::drawLabel (juce::Graphics& g, juce::Label& label)
+void RoomPanLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
 {
     auto bounds = label.getLocalBounds().toFloat();
 
-    g.setFont (juce::Font (juce::FontOptions (13.0f)).withStyle (juce::Font::bold));
-    g.setColour (juce::Colour (colourTextPrimary));
-    g.drawText (label.getText().toUpperCase(), bounds, juce::Justification::centred);
+    g.setFont(juce::Font(juce::FontOptions(12.0f)).withStyle(juce::Font::plain));
+    g.setColour(juce::Colour(0xff4a5260));
+    g.drawText(label.getText(), label.getLocalBounds().toFloat(),
+               juce::Justification::centred);
 }
-void RoomPanAudioProcessorEditor::configureSlider (juce::Slider& slider, juce::Label& label,
-                                                     const juce::String& labelText)
+void RoomPanAudioProcessorEditor::configureSlider(juce::Slider& slider, juce::Label& label,
+                                                    const juce::String& labelText)
 {
-    slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    slider.setTextBoxStyle (juce::Slider::NoTextBox, true, 0, 0); // custom readout drawn in LookAndFeel
-    addAndMakeVisible (slider);
+    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+    addAndMakeVisible(slider);
 
-    label.setText (labelText, juce::dontSendNotification);
-    label.setJustificationType (juce::Justification::centred);
-    label.setFont (juce::Font (juce::FontOptions (13.0f)).withStyle (juce::Font::bold));
-    label.attachToComponent (&slider, false);
-    addAndMakeVisible (label);
+    label.setText(labelText, juce::dontSendNotification);
+    label.setJustificationType(juce::Justification::centred);
+    // label.attachToComponent removed — resized() handles positioning
+    addAndMakeVisible(label);
 }
 
-void RoomPanAudioProcessorEditor::paint (juce::Graphics& g)
+void RoomPanAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (RoomPanLookAndFeel::colourBackground));
+    const float headerH = getHeight() * 0.10f;
 
-    // a single thin hairline beneath the title area — the one quiet structural accent
-    g.setColour (juce::Colour (RoomPanLookAndFeel::colourTrack));
-    g.drawLine (20.0f, 56.0f, (float) getWidth() - 20.0f, 56.0f, 1.0f);
+    g.fillAll(juce::Colour(RoomPanLookAndFeel::colourPanel));
 
-    g.setColour (juce::Colour (RoomPanLookAndFeel::colourTextPrimary));
-    g.setFont (juce::Font (juce::FontOptions (16.0f)).withStyle (juce::Font::bold));
-    g.drawText ("Room Panner", juce::Rectangle<int> (0, 16, getWidth(), 24),
-                juce::Justification::centred);
+    g.setColour(juce::Colour(RoomPanLookAndFeel::colourBackground));
+    g.fillRect(0.0f, 0.0f, (float) getWidth(), headerH);
+
+    g.setFont(juce::Font(juce::FontOptions(22.0f)).withStyle(juce::Font::plain));
+    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTextPrimary));
+    g.drawText("roompan",
+               juce::Rectangle<float>(16.0f, headerH * 0.15f, 200.0f, headerH * 0.55f),
+               juce::Justification::centredLeft);
+
+    g.setFont(juce::Font(juce::FontOptions(11.0f)).withStyle(juce::Font::plain));
+    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTextSecondary));
+    g.drawText("spatial panner  v0.1",
+               juce::Rectangle<float>(16.0f, headerH * 0.65f, 260.0f, headerH * 0.30f),
+               juce::Justification::centredLeft);
+
+    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTrack));
+    g.drawLine(0.0f, headerH, (float) getWidth(), headerH, 1.0f);
 }
-
 
 
 void RoomPanAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced(20);
-    area.removeFromTop(20); // leave room for the labels attached above each slider
-    const auto sliderWidth = area.getWidth() / 4;
-    sourcePositionView.setBounds (area.removeFromTop (140));
-    panSlider.setBounds(area.removeFromLeft(sliderWidth).reduced(10));
-    widthSlider.setBounds(area.removeFromLeft(sliderWidth).reduced(10));
-    ildSlider.setBounds(area.removeFromLeft(sliderWidth).reduced(10));
-    depthSlider.setBounds(area.reduced(10));
-}
+    const float w = (float) getWidth();
+    const float h = (float) getHeight();
 
+    // All spacing derived as proportions of window size
+    const float headerH    = h * 0.10f;
+    const float margin     = w * 0.04f;
+    const float gap        = h * 0.02f;
+
+    auto area = getLocalBounds().toFloat();
+    area.removeFromTop    (headerH);
+    area.reduce           (margin, 0);
+    area.removeFromBottom (margin * 0.5f);
+
+    // Visualizer takes top 35% of remaining height
+    const float vizH = area.getHeight() * 0.35f;
+    sourcePositionView.setBounds (area.removeFromTop (vizH).toNearestInt());
+    area.removeFromTop (gap);
+
+    // Four equal knob columns from remaining space
+    const float colW = area.getWidth() / 4.0f;
+
+    // Labels sit above knobs — give them a fixed slice of knob column height
+    const float labelH = area.getHeight() * 0.18f;
+    //const float knobH  = area.getHeight() - labelH;
+
+    auto labelRow = area.removeFromTop (labelH);
+    auto knobRow  = area;
+
+    panSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
+    widthSlider.setBounds (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
+    ildSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
+    depthSlider.setBounds (knobRow.reduced        (colW * 0.08f, 0).toNearestInt());
+
+    // Labels centered over their respective knob columns
+    panLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
+    widthLabel.setBounds (labelRow.removeFromLeft (colW).toNearestInt());
+    ildLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
+    depthLabel.setBounds (labelRow.toNearestInt());
+}

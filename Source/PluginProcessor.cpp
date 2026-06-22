@@ -90,41 +90,61 @@ void RoomPan::process(juce::AudioBuffer<float>& buffer)
 
     for (int n = 0; n < numSamples; ++n)
     {
-        const auto pan = smoothedPan.getNextValue();
-        const auto width = smoothedWidth.getNextValue();
-        const auto ild = smoothedIld.getNextValue();
-        const auto depth = smoothedDepth.getNextValue();
+        const float pan = smoothedPan.getNextValue();
+        const float width = smoothedWidth.getNextValue();
+        const float ild = smoothedIld.getNextValue();
+        const float depth = smoothedDepth.getNextValue();
 
-        // Collapse to a single source signal before spatializing it.
-        const auto monoIn = right != nullptr ? 0.5f * (left[n] + right[n]) : left[n];
-        pushSample(monoIn);
+        // split input signal into mid and side
+        const float monoIn = right != nullptr ? 0.5f * (left[n] + right[n]) : left[n];
+        const float inLeft = left[n];
+        const float inRight = right != nullptr ? right[n] : left[n];
+        const float inMid = 0.5f * (inLeft + inRight);
+        const float inSide = 0.5f * (inLeft - inRight);
+        pushSample(inMid); // process mid only
 
-        const auto itdSeconds = computeSignedItdSeconds(pan, width / 100.0f);
-        const auto itdSamples = itdSeconds * (float)sampleRate;
-        const auto preDelaySamp = preDelaySeconds * (float)sampleRate;
+        // compute ITD-based delay for left and right channels. The delay is always positive, and the pan law is implemented
+        const float itdSeconds = computeSignedItdSeconds(pan, width / 100.0f);
+        const float itdSamples = itdSeconds * (float)sampleRate;
+        const float preDelaySamp = preDelaySeconds * (float)sampleRate;
 
         // Both delays stay non-negative across the whole pan range; their
         // difference is exactly the signed ITD computed above.
-        const auto delayLeft = preDelaySamp + itdSamples * 0.5f;
-        const auto delayRight = preDelaySamp - itdSamples * 0.5f;
+        const float delayLeft = preDelaySamp + itdSamples * 0.5f;
+        const float delayRight = preDelaySamp - itdSamples * 0.5f;
 
-        const auto tapLeft = readInterpolated(delayLeft);
-        const auto tapRight = readInterpolated(delayRight);
+        const float tapLeft = readInterpolated(delayLeft);
+        const float tapRight = readInterpolated(delayRight);
 
         // Equal-power gain law, blended in by the ILD amount parameter.
-        const auto angleNorm = (pan + 1.0f) * juce::MathConstants<float>::pi * 0.25f; // 0..pi/2
-        const auto fullGainL = std::cos(angleNorm);
-        const auto fullGainR = std::sin(angleNorm);
+        const float angleNorm = (pan + 1.0f) * juce::MathConstants<float>::pi * 0.25f; // 0..pi/2
+        const float fullGainL = std::cos(angleNorm);
+        const float fullGainR = std::sin(angleNorm);
 
-        const auto gainL = juce::jmap(ild, 1.0f, fullGainL);
-        const auto gainR = juce::jmap(ild, 1.0f, fullGainR);
+        const float gainL = juce::jmap(ild, 1.0f, fullGainL);
+        const float gainR = juce::jmap(ild, 1.0f, fullGainR);
         
-        const auto gainLD = juce::jmap(depth, gainL, 0.0f);
-        const auto gainRD = juce::jmap(depth, gainR, 0.0f);
+        const float gainLD = juce::jmap(depth, gainL, 0.0f);
+        const float gainRD = juce::jmap(depth, gainR, 0.0f);
+        
+        const float pannedL = tapLeft * gainLD;
+        const float pannedR = tapRight * gainRD;
 
         left[n] = tapLeft * gainLD;
         if (right != nullptr)
             right[n] = tapRight * gainRD;
+
+        if (right != nullptr)
+        {
+            // Add the side signal back in, scaled by the width parameter. This is a simple way to add some of the original stereo information back in, which can help with the perception of width and depth.
+            left[n] += pannedL + inSide;
+            right[n] += pannedR - inSide; 
+        }
+        else
+        {
+            // For mono output, just add the side signal scaled by width. This can help preserve some of the stereo information in a mono mix.
+            left[n] += pannedL;
+        }
     }
 }
 

@@ -13,13 +13,13 @@ public:
                             float rotaryEndAngle, juce::Slider& slider) override;
 
     void drawLabel (juce::Graphics& g, juce::Label& label) override;
-
-    static constexpr juce::uint32 colourBackground    = 0xfffaf8f5;
-    static constexpr juce::uint32 colourTrack         = 0xffe8e4dd;
-    static constexpr juce::uint32 colourTextPrimary   = 0xff2b2a28;
-    static constexpr juce::uint32 colourTextSecondary = 0xff8c887f;
-    static constexpr juce::uint32 colourAccent        = 0xff3e7c7c;
-    static constexpr juce::uint32 colourAccentSoft    = 0xffa8c9c5;
+    static constexpr juce::uint32 colourBackground    = 0xffb8c4d0;  // cool blue-grey
+    static constexpr juce::uint32 colourPanel         = 0xffc8d4de;  // slightly lighter panel
+    static constexpr juce::uint32 colourTrack         = 0xffc2cbd6;  // arc track
+    static constexpr juce::uint32 colourTextPrimary   = 0xff2e3238;  // near-black
+    static constexpr juce::uint32 colourTextSecondary = 0xff4a5260;  // medium grey-blue
+    static constexpr juce::uint32 colourAccent        = 0xffffffff;  // white — the arc
+    static constexpr juce::uint32 colourKnob          = 0xff303338;  // dark knob body
 };
 
 // ---- 2. SourcePositionView second ----
