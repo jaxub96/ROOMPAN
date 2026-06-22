@@ -20,6 +20,7 @@ public:
     static constexpr juce::uint32 colourTextSecondary = 0xff4a5260;  // medium grey-blue
     static constexpr juce::uint32 colourAccent        = 0xffffffff;  // white — the arc
     static constexpr juce::uint32 colourKnob          = 0xff303338;  // dark knob body
+    
 };
 
 // ---- 2. SourcePositionView second ----
@@ -51,14 +52,15 @@ class RoomPanAudioProcessorEditor : public juce::AudioProcessorEditor
 public:
     explicit RoomPanAudioProcessorEditor (RoomPanAudioProcessor&);
     ~RoomPanAudioProcessorEditor() override;
-
+    static constexpr float baseWidth  = 500.0f;
+    static constexpr float baseHeight = 600.0f;
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
     void configureSlider (juce::Slider& slider, juce::Label& label,
                           const juce::String& labelText);
-
+    juce::Component content;
     RoomPanAudioProcessor& audioProcessor;
 
     RoomPanLookAndFeel customLookAndFeel;   // must be before sliders

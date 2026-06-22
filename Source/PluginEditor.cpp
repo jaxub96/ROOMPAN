@@ -20,15 +20,19 @@ RoomPanAudioProcessorEditor::RoomPanAudioProcessorEditor (RoomPanAudioProcessor&
     ildAttachment(p.apvts, "ild", ildSlider),
     depthAttachment(p.apvts, "depth", depthSlider)
 {
-    addAndMakeVisible (sourcePositionView);
+    addAndMakeVisible (content);
+    content.addAndMakeVisible (sourcePositionView);
     configureSlider(panSlider, panLabel, "Pan");
     configureSlider(widthSlider, widthLabel, "Width");
     configureSlider(ildSlider, ildLabel, "ILD Amount");
     configureSlider(depthSlider, depthLabel, "Depth");
     setLookAndFeel (&customLookAndFeel);   // <-- this line was missing
 
-    setSize(600, 400);
-    setResizable(true, true);
+    // Lock the aspect ratio so resizing always stays proportional
+    setResizeLimits (300, 360, 1200, 1440);
+    getConstrainer()->setFixedAspectRatio (baseWidth / baseHeight);
+    setSize ((int) baseWidth, (int) baseHeight);
+    setResizable (true, true);
 }
 
 RoomPanAudioProcessorEditor::~RoomPanAudioProcessorEditor()
@@ -279,78 +283,80 @@ void RoomPanAudioProcessorEditor::configureSlider(juce::Slider& slider, juce::La
 {
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-    addAndMakeVisible(slider);
+    content.addAndMakeVisible(slider);
 
     label.setText(labelText, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
     // label.attachToComponent removed — resized() handles positioning
-    addAndMakeVisible(label);
+    content.addAndMakeVisible(label);
 }
 
-void RoomPanAudioProcessorEditor::paint(juce::Graphics& g)
+void RoomPanAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    const float headerH = getHeight() * 0.10f;
+    const float headerH = 60.0f;
 
-    g.fillAll(juce::Colour(RoomPanLookAndFeel::colourPanel));
+    g.fillAll (juce::Colour (RoomPanLookAndFeel::colourPanel));
 
-    g.setColour(juce::Colour(RoomPanLookAndFeel::colourBackground));
-    g.fillRect(0.0f, 0.0f, (float) getWidth(), headerH);
+    g.setColour (juce::Colour (RoomPanLookAndFeel::colourBackground));
+    g.fillRect (0.0f, 0.0f, baseWidth, headerH);
 
-    g.setFont(juce::Font(juce::FontOptions(22.0f)).withStyle(juce::Font::plain));
-    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTextPrimary));
-    g.drawText("roompan",
-               juce::Rectangle<float>(16.0f, headerH * 0.15f, 200.0f, headerH * 0.55f),
-               juce::Justification::centredLeft);
+    g.setFont (juce::Font (juce::FontOptions (22.0f)));
+    g.setColour (juce::Colour (RoomPanLookAndFeel::colourTextPrimary));
+    g.drawText ("roompan",
+                juce::Rectangle<float> (16.0f, 10.0f, 200.0f, 28.0f),
+                juce::Justification::centredLeft);
 
-    g.setFont(juce::Font(juce::FontOptions(11.0f)).withStyle(juce::Font::plain));
-    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTextSecondary));
-    g.drawText("spatial panner  v0.1",
-               juce::Rectangle<float>(16.0f, headerH * 0.65f, 260.0f, headerH * 0.30f),
-               juce::Justification::centredLeft);
+    g.setFont (juce::Font (juce::FontOptions (11.0f)));
+    g.setColour (juce::Colour (RoomPanLookAndFeel::colourTextSecondary));
+    g.drawText ("spatial panner  v0.1",
+                juce::Rectangle<float> (16.0f, 38.0f, 260.0f, 16.0f),
+                juce::Justification::centredLeft);
 
-    g.setColour(juce::Colour(RoomPanLookAndFeel::colourTrack));
-    g.drawLine(0.0f, headerH, (float) getWidth(), headerH, 1.0f);
+    g.setColour (juce::Colour (RoomPanLookAndFeel::colourTrack));
+    g.drawLine (0.0f, headerH, baseWidth, headerH, 1.0f);
 }
-
 
 void RoomPanAudioProcessorEditor::resized()
 {
-    const float w = (float) getWidth();
-    const float h = (float) getHeight();
+    // Scale the entire UI uniformly from the base canvas size
+    // to whatever the window currently is, maintaining aspect ratio
+    const float scaleX = (float) getWidth()  / baseWidth;
+    const float scaleY = (float) getHeight() / baseHeight;
+    const float scale  = juce::jmin (scaleX, scaleY); // uniform — use the smaller axis
 
-    // All spacing derived as proportions of window size
-    const float headerH    = h * 0.10f;
-    const float margin     = w * 0.04f;
-    const float gap        = h * 0.02f;
+    content.setTransform (juce::AffineTransform::scale (scale));
+    content.setBounds (0, 0,
+                   (int) baseWidth,
+                   (int) baseHeight);
 
-    auto area = getLocalBounds().toFloat();
+    // All bounds are now in base-canvas coordinates — fixed, never recalculated
+    const float headerH = 60.0f;
+    const float margin  = 20.0f;
+    const float gap     = 10.0f;
+
+    auto area = juce::Rectangle<float> (0, 0, baseWidth, baseHeight);
     area.removeFromTop    (headerH);
-    area.reduce           (margin, 0);
-    area.removeFromBottom (margin * 0.5f);
+    area.reduce           (margin, 0.0f);
+    area.removeFromBottom (margin);
 
-    // Visualizer takes top 35% of remaining height
-    const float vizH = area.getHeight() * 0.35f;
-    sourcePositionView.setBounds (area.removeFromTop (vizH).toNearestInt());
+    content.addAndMakeVisible (sourcePositionView);
+    sourcePositionView.setBounds (area.removeFromTop (180.0f).toNearestInt());
     area.removeFromTop (gap);
 
-    // Four equal knob columns from remaining space
-    const float colW = area.getWidth() / 4.0f;
-
-    // Labels sit above knobs — give them a fixed slice of knob column height
-    const float labelH = area.getHeight() * 0.18f;
-    //const float knobH  = area.getHeight() - labelH;
+    const float labelH = 24.0f;
+    const float colW   = area.getWidth() / 4.0f;
 
     auto labelRow = area.removeFromTop (labelH);
     auto knobRow  = area;
 
-    panSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
-    widthSlider.setBounds (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
-    ildSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (colW * 0.08f, 0).toNearestInt());
-    depthSlider.setBounds (knobRow.reduced        (colW * 0.08f, 0).toNearestInt());
-
-    // Labels centered over their respective knob columns
     panLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
     widthLabel.setBounds (labelRow.removeFromLeft (colW).toNearestInt());
     ildLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
     depthLabel.setBounds (labelRow.toNearestInt());
+
+    const float knobPad = colW * 0.1f;
+    panSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
+    widthSlider.setBounds (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
+    ildSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
+    depthSlider.setBounds (knobRow.reduced        (knobPad, 0).toNearestInt());
 }
