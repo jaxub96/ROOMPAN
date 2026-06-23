@@ -1,0 +1,21 @@
+{
+    "colourBackground":    "ffb8c4d0",
+    "colourPanel":         "ffc8d4de",
+    "colourTrack":         "ffc2cbd6",
+    "colourTextPrimary":   "ff2e3238",
+    "colourTextSecondary": "ff4a5260",
+    "colourAccent":        "ffffffff",
+    "colourKnob":          "ff303338",
+
+    "headerHeight":        60.0,
+    "margin":              20.0,
+    "labelHeight":         12.0,
+    "knobPadding":         0.1,
+    "vizHeight":           180.0,
+    "gap":                 10.0,
+
+    "titleFontSize":       22.0,
+    "subtitleFontSize":    11.0,
+    "labelFontSize":       12.0,
+    "valueFontSize":       14.0
+}

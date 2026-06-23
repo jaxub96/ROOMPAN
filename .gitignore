@@ -5,3 +5,4 @@ build/
 .vs/
 JuceLibraryCode/
 *.jucer.bak
+.vscode/
