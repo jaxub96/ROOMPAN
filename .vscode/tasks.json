@@ -14,6 +14,12 @@
             "command": "${workspaceFolder}\\build-release.bat",
             "group": "build",
             "problemMatcher": "$msCompile"
+        },
+        {
+        "label": "auto commit",
+        "type": "shell",
+        "command": "powershell -ExecutionPolicy Bypass -File ./auto-commit.ps1",
+        "problemMatcher": []
         }
     ]
 }

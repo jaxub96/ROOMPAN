@@ -9,7 +9,7 @@
 
     "headerHeight":        60.0,
     "margin":              20.0,
-    "labelHeight":         12.0,
+    "labelHeight":         60.0,
     "knobPadding":         0.1,
     "vizHeight":           180.0,
     "gap":                 10.0,

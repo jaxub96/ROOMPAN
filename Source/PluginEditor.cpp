@@ -386,18 +386,34 @@ void RoomPanAudioProcessorEditor::resized()
     area.removeFromTop (gap);
 
     const float colW = area.getWidth() / 4.0f;
+const float knobPad = colW * theme.knobPadding;
 
-    auto labelRow = area.removeFromTop (labelH);
-    auto knobRow  = area;
+auto panCol   = area.removeFromLeft(colW);
+auto widthCol = area.removeFromLeft(colW);
+auto ildCol   = area.removeFromLeft(colW);
+auto depthCol = area;
 
-    panLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
-    widthLabel.setBounds (labelRow.removeFromLeft (colW).toNearestInt());
-    ildLabel.setBounds   (labelRow.removeFromLeft (colW).toNearestInt());
-    depthLabel.setBounds (labelRow.toNearestInt());
+auto layoutColumn = [labelH, knobPad]
+    (juce::Rectangle<float> col,
+     juce::Component& label,
+     juce::Component& slider)
+{
+    auto sliderBounds = col.reduced(knobPad, 0.0f);
 
-    const float knobPad = colW * theme.knobPadding;
-    panSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
-    widthSlider.setBounds (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
-    ildSlider.setBounds   (knobRow.removeFromLeft (colW).reduced (knobPad, 0).toNearestInt());
-    depthSlider.setBounds (knobRow.reduced (knobPad, 0).toNearestInt());
+    const float knobY = sliderBounds.getCentreY();
+
+    auto labelBounds = juce::Rectangle<float>(
+        sliderBounds.getX(),
+        knobY - sliderBounds.getWidth() * 0.5f - labelH - 6.0f,
+        sliderBounds.getWidth(),
+        labelH);
+
+    label.setBounds(labelBounds.toNearestInt());
+    slider.setBounds(sliderBounds.toNearestInt());
+};
+
+layoutColumn(panCol,   panLabel,   panSlider);
+layoutColumn(widthCol, widthLabel, widthSlider);
+layoutColumn(ildCol,   ildLabel,   ildSlider);
+layoutColumn(depthCol, depthLabel, depthSlider);
 }
